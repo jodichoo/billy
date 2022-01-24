@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billy</title>
+    <link rel='stylesheet' href='./styles.css'></link>
+    <script src='./script.js' async></script>
+</head>
+<body>
+    <div id='app-container'>
+        <div id='payees-container'>
+            <h1>Who are paying?</h1>
+            <div id='payees'>
+                <div class='payee' id='payee0'>Me: $<span id='amt0'>0</span></div>
+            </div>
+            <form id='add-payee-form'>
+                <input type='text' id='add-payee-name' placeholder="Name" required/><button type='submit'>+ Add payee</button>
+            </form>
+        </div>
+        <div id='bill-container'>
+            <h1>Here's your bill:</h1>
+            <div id='bill-table-container'>
+                <table id='bill'>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Who?</th>
+                    </tr>
+                </table>
+            </div>
+            <form id='add-item-form'>
+                <!-- <div class='add-item-fields'> -->
+                    <input id='add-item-item' type='text' placeholder="Item" required/>
+                    <input id='add-item-price' type='number' placeholder="Price" min='0' step="0.01" required/>
+                <!-- </div> -->
+                <button type='submit' id='add-item-button'>+ Add item</button>
+            </form>
+        </div>
+        
+    </div>
+</body>
+</html>
