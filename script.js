@@ -168,19 +168,15 @@ function displayDropdown(id) {
 function getDropdownPayeeList(whoId) {
     const list = document.createElement('div'); 
     list.id = 'dropdown'; 
-    payees.map((payee) => {
+    const menuItems = [...payees, 'All'];
+     
+    menuItems.map((payee) => {
         const p = document.createElement('div'); 
         p.innerHTML = payee; 
         p.className = 'dropdown-item';
         p.addEventListener('click', () => dropdownSelect(payee, whoId)); 
         list.appendChild(p); 
     })
-
-    const forAll = document.createElement('div'); 
-    forAll.innerHTML = 'All'; 
-    forAll.className='dropdown-item'; 
-    forAll.addEventListener('click', () => dropdownSelect('All', whoId));
-    list.appendChild(forAll); 
 
     return list;
 }
@@ -194,7 +190,6 @@ function dropdownSelect(payee, whoId) {
     const itemId = parseInt(whoId.substr(3));
     billWho[itemId] = payee; 
 
-    // some function here to recalculate the expenses 
     update(); 
 
     // remove the dropdown menu 
