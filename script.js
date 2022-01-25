@@ -1,10 +1,14 @@
 let numPayees = 1;
 let payees = ['Me'];
 let payeesAmt = [0]; 
-let billItems = []; 
-let billPrices = []; 
-let billWho = [];
-let itemCount = 0; 
+// let billItems = []; 
+// let billPrices = []; 
+// let billWho = [];
+
+let billItemsFixed = {}; 
+
+let itemCount = 0;
+let idCount = 0; 
 let dropdownOpen = false; 
 
 const BILL = document.getElementById('bill');
@@ -19,7 +23,7 @@ function addItem(event) {
     const newItem = ADD_FORM_ITEM.value;
     const newPrice = parseFloat(ADD_FORM_PRICE.value);
 
-    addItemToArrays(newItem, newPrice);
+    addItemToStore(newItem, newPrice);
 
     const newBillItem = createBillItem(newItem, newPrice);
     BILL.appendChild(newBillItem);
@@ -67,12 +71,11 @@ function createNewPayee(name, amt = 0) {
     return newPayee; 
 }
 
-function addItemToArrays(newItem, newPrice, newWho = 'All') {
-    // push to arrays 
-    billItems.push(newItem); 
-    billPrices.push(newPrice);
-    billWho.push(newWho); 
-    itemCount++; 
+function addItemToStore(newItem, newPrice, newWho = 'All') {
+    // billItemsFixed[itemCount] = [newItem, newPrice, newWho]; 
+    billItemsFixed = {...billItemsFixed, [idCount]: [newItem, newPrice, newWho]}
+    console.log(billItemsFixed); 
+    itemCount++; idCount ++;
 }
 
 function addPayeeToArrays(newName, newAmt = 0) {
@@ -82,11 +85,13 @@ function addPayeeToArrays(newName, newAmt = 0) {
 }
 
 function calcShared() {
+    console.log(billItemsFixed);
     let sharedSum = 0; 
-    for (let i = 0; i < itemCount; i++) {
-        const currWho = billWho[i]; 
+    for (let i = 0; i < idCount; i++) {
+        const currEntry = billItemsFixed[i]; 
+        const currWho = currEntry ? currEntry[2] : currEntry; 
         if (currWho === 'All') {
-            sharedSum += billPrices[i]; 
+            sharedSum += currEntry[1]; 
         }
     }
     const result = sharedSum / numPayees;
@@ -94,18 +99,26 @@ function calcShared() {
 }
 
 function update() {
+    console.log(billItemsFixed); 
     for (let i = 0; i < numPayees; i++) {
         // get indiv amts
         const name = payees[i];  
         let indivAmt = 0; 
-        billWho.map((payee, id) => {
-            if (payee === name) {
-                indivAmt += billPrices[id]; 
+        for (let j = 0; j < idCount; j++) {
+            const currEntry = billItemsFixed[j]; 
+            const currWho = currEntry ? currEntry[2] : currEntry; 
+            if (currWho === name) {
+                indivAmt += currEntry[1]; 
             }
-        })
+        }
 
-        const element = document.getElementById(`amt${i}`); 
-        element.innerHTML = calcShared() + indivAmt;  
+        const element = document.getElementById(`amt${i}`);
+        const shared = calcShared(); 
+        console.log(shared, indivAmt); 
+        const final = calcShared() + indivAmt;
+
+        payeesAmt[i] = final; 
+        element.innerHTML = final
     }
 }
 
@@ -115,14 +128,15 @@ function initialise() {
 }
 
 function createBillItem(name, price, who = 'All') {
-    const billItemId = itemCount - 1;
+    const billItemId = idCount - 1;
     // create a new tr 
     const newBillItem = document.createElement('tr'); 
     newBillItem.id = `billItem${billItemId}`;
 
     // create entry for item 
     const newItem = document.createElement('td');
-    newItem.id = `item${billItemId}`;
+    const itemId = `item${billItemId}`;
+    newItem.id = itemId;
     newItem.innerHTML = name; 
     // create entry for price 
     const newPrice = document.createElement('td');
@@ -137,17 +151,34 @@ function createBillItem(name, price, who = 'All') {
     newWho.id = whoId;
     newWho.addEventListener('click', () => displayDropdown(whoId)); 
 
-    newBillItem.appendChild(newItem);
-    newBillItem.appendChild(newPrice); 
-    newBillItem.appendChild(newWho);
+    // create delete button
+    const newDel = document.createElement('td');
+    newDel.className = 'delete-item';  
+    newDel.innerHTML = 'delete';
+    newDel.addEventListener('click', () => deleteItem(billItemId))
+
+    newBillItem.append(newItem, newPrice, newWho, newDel); 
     return newBillItem; 
+}
+
+function deleteItem(itemId) {
+    // billItemsFixed[itemId] = undefined; 
+    billItemsFixed = {...billItemsFixed, [itemId]: undefined}; 
+    itemCount -= 1;
+    
+    document.getElementById('billItem' + itemId).remove(); 
+
+    if (dropdownOpen) {
+        removeDropdown(); 
+    }
+    console.log('deleted element, updating...', 'id is ' + itemId); 
+    update(); 
 }
 
 function displayDropdown(id) {
     if (!dropdownOpen) {
         const element = document.getElementById(id)
         const rectPos = element.getBoundingClientRect(); 
-        console.log(rectPos.top, rectPos.right, rectPos.bottom, rectPos.left);
         const menu = getDropdownPayeeList(id); 
 
         menu.style.position = 'absolute';
@@ -157,11 +188,9 @@ function displayDropdown(id) {
         menu.style.color = 'white';
 
         document.body.appendChild(menu); 
-        // element.appendChild(menu); 
         dropdownOpen = true; 
     } else {
-        document.getElementById('dropdown').remove(); 
-        dropdownOpen = false; 
+        removeDropdown(); 
     }
 }
 
@@ -169,7 +198,7 @@ function getDropdownPayeeList(whoId) {
     const list = document.createElement('div'); 
     list.id = 'dropdown'; 
     const menuItems = [...payees, 'All'];
-     
+
     menuItems.map((payee) => {
         const p = document.createElement('div'); 
         p.innerHTML = payee; 
@@ -181,6 +210,11 @@ function getDropdownPayeeList(whoId) {
     return list;
 }
 
+function removeDropdown() {
+    dropdownOpen = false; 
+    document.getElementById('dropdown').remove(); 
+}
+
 function dropdownSelect(payee, whoId) {
     // get the 'who' element of the affected row and change the payee 
     const affectedWho = document.getElementById(whoId); 
@@ -188,13 +222,11 @@ function dropdownSelect(payee, whoId) {
     // update 'who' element
     affectedWho.innerHTML = payee;
     const itemId = parseInt(whoId.substr(3));
-    billWho[itemId] = payee; 
+    billItemsFixed[itemId][2] = payee; 
 
     update(); 
 
-    // remove the dropdown menu 
-    dropdownOpen = false;
-    document.getElementById('dropdown').remove(); 
+    removeDropdown(); 
 }
 
 initialise();
